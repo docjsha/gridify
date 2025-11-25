@@ -13,13 +13,13 @@ def fetch_shopify_products(base_url):
     """
     # Ensure URL ends with /products.json
     clean_url = base_url.rstrip('/')
-    if not clean_url.endswith('products.json?limit=1000'):
-        api_url = f"{clean_url}/products.json?limit=1000"
+    if not clean_url.endswith('products.json'):
+        api_url = f"{clean_url}/products.json"
     else:
         api_url = clean_url
 
     # Add a limit param to get more products (max is usually 250)
-    params = {'limit': 250}
+    params = {'limit': 1000}
     
     try:
         response = requests.get(api_url, params=params, timeout=10)
