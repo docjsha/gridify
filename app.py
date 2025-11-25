@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 # Set page configuration to wide mode for a "large grid" feel
 st.set_page_config(page_title="Shopify Image Grid", layout="wide")
 
+@st.cache_data(show_spinner="Fetching products...")
 def fetch_shopify_products(base_url):
     """
     Fetches products from a Shopify store's public JSON API.
@@ -90,39 +91,38 @@ if url_input:
     # Clean the URL input
     cleaned_url = clean_shopify_url(url_input)
     
-    with st.spinner(f"Fetching inventory from {cleaned_url} ..."):
-        products = fetch_shopify_products(cleaned_url)
+    products = fetch_shopify_products(cleaned_url)
+    
+    if products:
+        image_data = extract_images(products, cleaned_url)
+        st.success(f"Found {len(products)} products.")
         
-        if products:
-            image_data = extract_images(products, cleaned_url)
-            st.success(f"Found {len(products)} products.")
+        # Grid Layout Settings
+        # Let user choose columns or default to a responsive number
+        cols_count = st.slider("Grid Columns", min_value=2, max_value=8, value=5)
+        
+        # Display images in a grid
+        # We iterate through the images and place them in columns
+        rows = math.ceil(len(image_data) / cols_count)
+        
+        for i in range(0, len(image_data), cols_count):
+            cols = st.columns(cols_count)
+            batch = image_data[i:i+cols_count]
             
-            # Grid Layout Settings
-            # Let user choose columns or default to a responsive number
-            cols_count = st.slider("Grid Columns", min_value=2, max_value=8, value=5)
-            
-            # Display images in a grid
-            # We iterate through the images and place them in columns
-            rows = math.ceil(len(image_data) / cols_count)
-            
-            for i in range(0, len(image_data), cols_count):
-                cols = st.columns(cols_count)
-                batch = image_data[i:i+cols_count]
-                
-                for idx, (img_url, title, product_url) in enumerate(batch):
-                    with cols[idx]:
-                          # Render clickable image with title directly below with no extra spacing
-                        st.markdown(
-                            f'<div style="text-align:center; margin:0; padding:0; font-size:0.9rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="{title}">{title}</div>',
-                            unsafe_allow_html=True,
-                        )
-                        st.markdown(
-                            f'<a href="{product_url}" target="_blank"><img src="{img_url}" style="width:100%; border-radius:6px;"></a>',
-                            unsafe_allow_html=True,
-                        )
-        else:
-            if url_input: # Only show warning if they tried to search
-                st.warning("No products found. Ensure the URL is correct and the site is built on Shopify.")
+            for idx, (img_url, title, product_url) in enumerate(batch):
+                with cols[idx]:
+                      # Render clickable image with title directly below with no extra spacing
+                    st.markdown(
+                        f'<div style="text-align:center; margin:0; padding:0; font-size:0.9rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="{title}">{title}</div>',
+                        unsafe_allow_html=True,
+                    )
+                    st.markdown(
+                        f'<a href="{product_url}" target="_blank"><img src="{img_url}" style="width:100%; border-radius:6px;"></a>',
+                        unsafe_allow_html=True,
+                    )
+    else:
+        if url_input: # Only show warning if they tried to search
+            st.warning("No products found. Ensure the URL is correct and the site is built on Shopify.")
 
 # Footer / Style tweaks
 st.markdown("""
