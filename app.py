@@ -13,8 +13,8 @@ def fetch_shopify_products(base_url):
     """
     # Ensure URL ends with /products.json
     clean_url = base_url.rstrip('/')
-    if not clean_url.endswith('products.json'):
-        api_url = f"{clean_url}/products.json"
+    if not clean_url.endswith('products.json?limit=1000'):
+        api_url = f"{clean_url}/products.json?limit=1000"
     else:
         api_url = clean_url
 
