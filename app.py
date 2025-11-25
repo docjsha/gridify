@@ -68,7 +68,7 @@ def clean_shopify_url(url):
     return f"{parsed.scheme}://{parsed.netloc}"
 # --- UI ---
 
-st.title("🛍️ Gridify – Visual Overview of Products in Shopify Stores.")
+st.title("🛍️ Gridify")
 st.markdown("Enter a Shopify store URL to visualize its product inventory.")
 
 url_input = st.text_input("Shopify Store URL", placeholder="")
