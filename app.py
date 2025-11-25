@@ -9,29 +9,42 @@ st.set_page_config(page_title="Shopify Image Grid", layout="wide")
 def fetch_shopify_products(base_url):
     """
     Fetches products from a Shopify store's public JSON API.
-    Handles basic URL formatting and error checking.
+    Handles pagination to retrieve all products (max 250 per page).
     """
     # Ensure URL ends with /products.json
     clean_url = base_url.rstrip('/')
     if not clean_url.endswith('products.json'):
-        api_url = f"{clean_url}/products.json"
+        base_api_url = f"{clean_url}/products.json"
     else:
-        api_url = clean_url
-
-    # Add a limit param to get more products (max is usually 250)
-    params = {'limit': 1000}
+        base_api_url = clean_url
     
-    try:
-        response = requests.get(api_url, params=params, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-        return data.get('products', [])
-    except requests.exceptions.RequestException as e:
-        st.error(f"Error fetching data: {e}")
-        return []
-    except ValueError:
-        st.error("Invalid JSON response. Is this a Shopify site?")
-        return []
+    all_products = []
+    page = 1
+    
+    while True:
+        try:
+            # Fetch products for current page
+            params = {'limit': 250, 'page': page}
+            response = requests.get(base_api_url, params=params, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+            products = data.get('products', [])
+            
+            # If no products returned, we've reached the end
+            if not products:
+                break
+            
+            all_products.extend(products)
+            page += 1
+            
+        except requests.exceptions.RequestException as e:
+            st.error(f"Error fetching data on page {page}: {e}")
+            break
+        except ValueError:
+            st.error("Invalid JSON response. Is this a Shopify site?")
+            break
+    
+    return all_products
 
 def extract_images(products, base_url):
     """
